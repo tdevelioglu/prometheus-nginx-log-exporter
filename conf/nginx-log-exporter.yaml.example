@@ -1,0 +1,28 @@
+---
+loglevel: DEBUG
+listen:
+  address: 0.0.0.0
+  port: 9900
+applications:
+  gitlab:
+    log_files:
+    - "/var/log/gitlab/nginx/gitlab_access.log"
+    format: $remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent
+      "$http_referer" "$http_user_agent" $request_time "$upstream_response_time"
+    include:
+    - path: "^/api/v4/"
+      methods:
+      - GET
+      - POST
+    exclude:
+    - path: "^/api/v4/jobs/"
+      methods:
+      - POST
+    replace:
+    - path: "^/api/v4/users/[0-9]+/"
+      with: "/api/v4/users/<id>/"
+  gitlab-pages:
+    log_files:
+    - "/var/log/gitlab/nginx/gitlab_pages_access.log"
+    format: $remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent
+      "$http_referer" "$http_user_agent" $request_time "$upstream_response_time"

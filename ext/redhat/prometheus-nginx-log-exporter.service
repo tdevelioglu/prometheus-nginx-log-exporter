@@ -1,0 +1,16 @@
+[Unit]
+Description=Prometheus exporter for Nginx logs
+After=network.target
+Requires=network.target
+
+[Service]
+User=prometheus-nginx-log-exporter
+Group=prometheus-nginx-log-exporter
+EnvironmentFile=-/etc/sysconfig/prometheus-nginx-log-exporter
+ExecStart=/usr/sbin/prometheus-nginx-log-exporter -config-file /etc/prometheus-nginx-log-exporter/config.yaml
+Restart=always
+RestartSec=15s
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
