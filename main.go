@@ -12,8 +12,9 @@ import (
 	"strings"
 
 	"github.com/hpcloud/tail"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/satyrius/gonx"
+
 	"github.com/tdevelioglu/prometheus-nginx-log-exporter/logging"
 )
 
@@ -63,7 +64,7 @@ func do_main() error {
 	listenAddr := fmt.Sprintf("%s:%d", gc.Listen.Address, gc.Listen.Port)
 	fmt.Printf("running HTTP server on %s\n", listenAddr)
 
-	http.Handle("/metrics", prometheus.Handler())
+	http.Handle("/metrics", promhttp.Handler())
 	err = http.ListenAndServe(listenAddr, nil)
 	if err != nil {
 		return err
