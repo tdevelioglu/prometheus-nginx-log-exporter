@@ -6,9 +6,10 @@ import (
 
 // metrics is the struct that contains pointers to our metric containers.
 type metrics struct {
-	bodyBytes       *prometheus.HistogramVec
-	upstreamSeconds *prometheus.HistogramVec
-	requestSeconds  *prometheus.HistogramVec
+	bodyBytes             *prometheus.HistogramVec
+	upstreamHeaderSeconds *prometheus.HistogramVec
+	upstreamSeconds       *prometheus.HistogramVec
+	requestSeconds        *prometheus.HistogramVec
 }
 
 // newMetrics creates a new metrics based on the provided application and
@@ -35,11 +36,19 @@ func newMetrics(application string, labelNames []string) *metrics {
 		ConstLabels: prometheus.Labels{"application": application},
 	}, labelNames)
 
-	prometheus.MustRegister(bodyBytes, upstreamSeconds, requestSeconds)
+	upstreamHeaderSeconds := prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace:   "nginx",
+		Name:        "http_upstream_header_time_seconds",
+		Help:        "Time to receiving the first byte of the response header from upstream servers",
+		ConstLabels: prometheus.Labels{"application": application},
+	}, labelNames)
+
+	prometheus.MustRegister(bodyBytes, upstreamHeaderSeconds, upstreamSeconds, requestSeconds)
 
 	return &metrics{
-		bodyBytes:       bodyBytes,
-		requestSeconds:  requestSeconds,
-		upstreamSeconds: upstreamSeconds,
+		bodyBytes:             bodyBytes,
+		requestSeconds:        requestSeconds,
+		upstreamSeconds:       upstreamSeconds,
+		upstreamHeaderSeconds: upstreamHeaderSeconds,
 	}
 }

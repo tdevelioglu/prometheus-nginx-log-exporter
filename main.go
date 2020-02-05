@@ -195,6 +195,15 @@ LINES:
 			}
 		}
 
+		if headerTime, err := entry.Field("upstream_header_time"); err == nil {
+			if totalTime, err := parseUpstreamTime(headerTime); err == nil {
+				logger.Debug("(%s): matched upstream_header_time to %.3f", file, totalTime)
+				metrics.upstreamHeaderSeconds.WithLabelValues(labelValues...).Observe(totalTime)
+			} else {
+				logger.Warn("(%s): failed to parse upstream_header_time field", file, err)
+			}
+		}
+
 		if responseTime, err := entry.FloatField("request_time"); err == nil {
 			logger.Debug("(%s): matched request_time to %.3f", file, responseTime)
 			metrics.requestSeconds.WithLabelValues(labelValues...).Observe(responseTime)
