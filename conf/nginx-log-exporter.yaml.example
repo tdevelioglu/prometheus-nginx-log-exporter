@@ -21,6 +21,7 @@ applications:
     replace:
     - path: "^/api/v4/users/[0-9]+/"
       with: "/api/v4/users/<id>/"
+    histogram_buckets: [.05, .1, .2, .5, 1, 2, 5, 10, 20, 30]
   gitlab-pages:
     log_files:
     - "/var/log/gitlab/nginx/gitlab_pages_access.log"
