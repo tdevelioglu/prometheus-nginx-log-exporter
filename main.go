@@ -76,7 +76,7 @@ func do_main() error {
 // that belong to a single application
 func monitorApp(name string, ac *appConfig) {
 	ln := append(staticLabels, ac.orderedLabelNames...)
-	metrics := newMetrics(name, ln)
+	metrics := newMetrics(name, ln, ac.HistogramBuckets)
 
 	parser := gonx.NewParser(ac.Format)
 	for _, file := range ac.LogFiles {

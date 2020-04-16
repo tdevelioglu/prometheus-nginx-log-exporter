@@ -80,10 +80,11 @@ type httpConfig struct {
 
 // appConfig represents a single nginx "application" to export log files for.
 type appConfig struct {
-	Format        string
-	FromBeginning bool `from_beginning`
-	Labels        map[string]string
-	LogFiles      []string `log_files`
+	Format           string
+	FromBeginning    bool `from_beginning`
+	Labels           map[string]string
+	LogFiles         []string  `log_files`
+	HistogramBuckets []float64 `histogram_buckets`
 
 	Exclude []filterConfig
 	Include []filterConfig
