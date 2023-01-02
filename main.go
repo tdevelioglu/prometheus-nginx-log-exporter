@@ -18,7 +18,7 @@ import (
 	"github.com/tdevelioglu/prometheus-nginx-log-exporter/logging"
 )
 
-const version = "0.1.0"
+const version = "1.1.0"
 
 var logger *logging.Logger
 
@@ -167,13 +167,24 @@ LINES:
 				if rc := replaceMatch(method, path, replace); rc != nil {
 					logger.Debug("(%s): found matching replace rule, %s %v -> %s",
 						file, rc.pathRe.String(), rc.Methods, rc.With)
-					path = rc.replace(path)
+					if rc.useTemplate() {
+						// use template to update path
+						path, err = rc.replaceWithTemplate(path)
+						if err != nil {
+							logger.Warn("(%s): replace path (%s) with template (%s) error, %v", file, path, rc.With, err)
+							continue
+						}
+					} else {
+						// use regex to update path
+						path = rc.replace(path)
+					}
 				} else {
 					logger.Debug("(%s): no matching replace rule found", file)
 				}
 			}
 			labelValues[0] = method
 			labelValues[1] = path
+			logger.Debug("(%s): matched path to %s", file, path)
 		}
 
 		if status, err := entry.Field("status"); err == nil {

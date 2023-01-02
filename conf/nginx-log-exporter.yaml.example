@@ -19,8 +19,12 @@ applications:
       methods:
       - POST
     replace:
+    # when multi regex paths can be matched, only use the first path by the list order
     - path: "^/api/v4/users/[0-9]+/"
       with: "/api/v4/users/<id>/"
+    # use subgroup match with non greedy to capture job value, and render with template
+    - path: "/api/v4/jobs/(?P<job>.*?)/.*"
+      with: "/api/v4/jobs/<{{ .job }}>"
     histogram_buckets: [.05, .1, .2, .5, 1, 2, 5, 10, 20, 30]
   gitlab-pages:
     log_files:
