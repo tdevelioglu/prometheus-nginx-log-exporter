@@ -202,7 +202,7 @@ LINES:
 				logger.Debug("(%s): matched upstream_response_time to %.3f", file, totalTime)
 				metrics.upstreamSeconds.WithLabelValues(labelValues...).Observe(totalTime)
 			} else {
-				logger.Warn("(%s): failed to parse upstream_response_time field", file, err)
+				logger.Warn("(%s): failed to parse upstream_response_time field, line: %s", file, line, err)
 			}
 		}
 
@@ -211,7 +211,7 @@ LINES:
 				logger.Debug("(%s): matched upstream_header_time to %.3f", file, totalTime)
 				metrics.upstreamHeaderSeconds.WithLabelValues(labelValues...).Observe(totalTime)
 			} else {
-				logger.Warn("(%s): failed to parse upstream_header_time field", file, err)
+				logger.Warn("(%s): failed to parse upstream_header_time field, line: %s", file, line, err)
 			}
 		}
 
