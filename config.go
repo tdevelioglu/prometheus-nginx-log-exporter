@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -8,6 +9,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strings"
+	"text/template"
 
 	"gopkg.in/yaml.v2"
 )
@@ -94,8 +97,8 @@ type appConfig struct {
 	orderedLabelValues []string
 }
 
-// compileRegexes compiles the various regex strings in appConfig.
-func (ac *appConfig) compileRegexes() error {
+// preCompile compiles the various regex or template strings in appConfig.
+func (ac *appConfig) preCompile() error {
 	for i := range (*ac).Exclude {
 		if err := (*ac).Exclude[i].compileRegex(); err != nil {
 			return err
@@ -109,8 +112,15 @@ func (ac *appConfig) compileRegexes() error {
 	}
 
 	for i := range (*ac).Replace {
-		if err := (*ac).Replace[i].compileRegex(); err != nil {
+		rc := &(*ac).Replace[i]
+		if err := rc.compileRegex(); err != nil {
 			return err
+		}
+		if rc.useTemplate() {
+			err := rc.compileTmpl()
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -140,7 +150,7 @@ func (ac *appConfig) init() error {
 	ac.orderedLabelNames = keys
 	ac.orderedLabelValues = values
 
-	if err := ac.compileRegexes(); err != nil {
+	if err := ac.preCompile(); err != nil {
 		return err
 	}
 	return nil
@@ -186,11 +196,50 @@ type replaceConfig struct {
 	filterConfig `,inline`
 
 	With string
+	Tmpl *template.Template
+}
+
+// compileTmpl compiles the replaceConfig path template in With field.
+func (rc *replaceConfig) compileTmpl() error {
+	tmpl, err := template.New("with_path").Parse(rc.With)
+	if err != nil {
+		return err
+	}
+
+	rc.Tmpl = tmpl
+	return nil
+}
+
+// useTemplate performs checking replaceConfig's string replacement with template or not.
+func (rc *replaceConfig) useTemplate() bool {
+	return strings.Contains(rc.With, "{{")
 }
 
 // replace performs replaceConfig's string replacement.
 func (rc *replaceConfig) replace(s string) string {
 	return rc.pathRe.ReplaceAllString(s, rc.With)
+}
+
+// replaceWithTemplate performs replaceConfig's string replacement with template.
+func (rc *replaceConfig) replaceWithTemplate(s string) (string, error) {
+	matches := rc.pathRe.FindStringSubmatch(s)
+	logger.Debug("path subgroup matches: %v", matches)
+
+	params := make(map[string]string)
+	for i, key := range rc.pathRe.SubexpNames() {
+		if i > 0 {
+			params[key] = matches[i]
+		}
+	}
+	logger.Debug("template params: %v", params)
+
+	var path bytes.Buffer
+	err := rc.Tmpl.Execute(&path, params)
+	if err != nil {
+		return "", err
+	}
+
+	return path.String(), nil
 }
 
 // newConfig creates a new global configuration from configuration file
