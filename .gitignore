@@ -17,3 +17,7 @@
 .*.swp
 
 /prometheus-nginx-log-exporter
+
+# dev
+access.log
+nginx-log-exporter.yaml
